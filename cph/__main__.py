@@ -3,7 +3,7 @@ from resource import RUSAGE_CHILDREN, getrusage
 from shutil import which
 import subprocess
 from pathlib import Path
-from time import time
+from time import perf_counter, time
 
 from rich.table import Table
 import typer
@@ -25,7 +25,10 @@ def main(ctx: typer.Context):
 
 
 @app.command()
-def new(language: str = "py", problem: str = "A"):
+def new(
+    language: str = typer.Option("py", "--language", "-l", help="language"),
+    problem: str = typer.Option("A", "--problem", "-p", help="problem name"),
+):
     template = folder / f"template.{language}"
     if not template.exists():
         print("There is no template for this language")
@@ -42,8 +45,13 @@ def new(language: str = "py", problem: str = "A"):
 
 
 @app.command()
-def run(language: str = "py", problem: str = "A"):
-    solution = Path(f"{problem}.{language}")
+def run(
+    solution: Path = typer.Argument(None, help="solution file path"),
+    inp: Path | None = typer.Option(None, "--input", "-i", help="input file"),
+    out: Path | None = typer.Option(None, "--output", "-o", help="output file"),
+):
+    language = solution.suffix.lstrip(".")
+    problem = solution.stem
     if not solution.exists():
         typer.confirm(
             "There is no solution for this problem. Do you want to create it instead?",
@@ -52,7 +60,9 @@ def run(language: str = "py", problem: str = "A"):
         new(language, problem)
         return
 
+    # Handle compilation of the solution if needed
     if language == "cpp":
+        start = perf_counter()
         subprocess.run(
             [
                 "g++",
@@ -64,7 +74,10 @@ def run(language: str = "py", problem: str = "A"):
                 solution.stem,
             ]
         )
-        exec = [str(solution.with_suffix(""))]
+        end = perf_counter()
+        print(f"Compilation Time: {(end - start):.4f} seconds")
+
+        exec = [solution.with_suffix("")]
     elif language == "py":
         if which("pypy3"):
             print("Using PyPy for execution")
@@ -76,28 +89,38 @@ def run(language: str = "py", problem: str = "A"):
         print("Unsupported language")
         return
 
-    inp_path = Path(f"{problem}.{inp}")
-    out_path = Path(f"{problem}.{out}")
+    # Handle input and output files
+    if not inp:
+        print(f"No input file specified, using default input file {problem}.INP")
+        inp = solution.with_suffix(".INP")
+    if not inp.exists():
+        print(f"There is no input file for problem {solution.stem}")
+        return
+    if not out:
+        print(f"No output file specified, using default output file {problem}.OUT")
+        out = solution.with_suffix((".OUT"))
 
+    # Execute the solution
     print(
-        f"Executing the solution for problem {problem} in {language_name.get(language, language)}"
+        f"Executing the solution for problem {solution.stem} in {language_name.get(language, language)}"
     )
     with (
-        inp_path.open("r") as f_inp,
-        out_path.open("w+") as f_out,
+        inp.open("r") as f_inp,
+        out.open("w+") as f_out,
     ):
         try:
+            start = perf_counter()
             subprocess.run(exec, stdin=f_inp, stdout=f_out)
-            info = getrusage(RUSAGE_CHILDREN)
-            print(f"CPU Time: {(info.ru_utime + info.ru_stime):.4f} seconds")
+            end = perf_counter()
+            print(f"Execution Time: {(end - start):.4f} seconds")
         except subprocess.CalledProcessError as e:
             print("Error occured while executing the solution")
             print(e)
             return
 
     with (
-        inp_path.open("r") as f_inp,
-        out_path.open("r") as f_out,
+        inp.open("r") as f_inp,
+        out.open("r") as f_out,
     ):
         lines_inp = f_inp.readlines()
         lines_out = f_out.readlines()
