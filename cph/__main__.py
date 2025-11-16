@@ -1,9 +1,8 @@
 from itertools import zip_longest
-from resource import RUSAGE_CHILDREN, getrusage
 from shutil import which
 import subprocess
 from pathlib import Path
-from time import perf_counter, time
+from time import perf_counter
 
 from rich.table import Table
 import typer
