@@ -3,6 +3,7 @@ from shutil import which
 import subprocess
 from pathlib import Path
 from time import perf_counter
+from typing import Annotated
 
 from rich.table import Table
 import typer
@@ -25,15 +26,27 @@ def main(ctx: typer.Context):
 
 @app.command()
 def new(
-    language: str = typer.Option("py", "--language", "-l", help="language"),
-    problem: str = typer.Option("A", "--problem", "-p", help="problem name"),
+    language: Annotated[
+        str,
+        typer.Option("--language", "-l", help="language", prompt="Language"),
+    ] = "py",
+    problem: Annotated[
+        str, typer.Option("--problem", "-p", help="problem name", prompt="Problem")
+    ] = "A",
 ):
     template = folder / f"template.{language}"
     if not template.exists():
         print("There is no template for this language")
         return
 
-    Path(f"{problem}.{language}").write_text(template.read_text())
+    file = Path(f"{problem}.{language}")
+
+    if file.exists():
+        typer.confirm(
+            f"The file {file} already exists. Do you want to overide it?", abort=True
+        )
+
+    Path(file).write_text(template.read_text())
     Path(f"{problem}.{inp}").touch()
     Path(f"{problem}.{out}").touch()
 
@@ -45,15 +58,23 @@ def new(
 
 @app.command()
 def run(
-    solution: Path = typer.Argument(None, help="solution file path"),
-    inp: Path | None = typer.Option(None, "--input", "-i", help="input file"),
-    out: Path | None = typer.Option(None, "--output", "-o", help="output file"),
+    solution: Annotated[Path | None, typer.Argument(help="solution file path")] = None,
+    inp: Annotated[
+        Path | None, typer.Option("--input", "-i", help="input file")
+    ] = None,
+    out: Annotated[
+        Path | None, typer.Option("--output", "-o", help="output file")
+    ] = None,
 ):
+    # If the argument is empty, prompt for it
+    if solution is None:
+        solution = Path(typer.prompt("Solution file: "))
+
     language = solution.suffix.lstrip(".")
     problem = solution.stem
     if not solution.exists():
         typer.confirm(
-            "There is no solution for this problem. Do you want to create it instead?",
+            "The solution file doesn't exist. Do you want to create it instead?",
             abort=True,
         )
         new(language, problem)
@@ -90,14 +111,12 @@ def run(
 
     # Handle input and output files
     if not inp:
-        print(f"No input file specified, using default input file {problem}.INP")
-        inp = solution.with_suffix(".INP")
+        inp = Path(typer.prompt("Input file", solution.with_suffix(".INP")))
     if not inp.exists():
         print(f"There is no input file for problem {solution.stem}")
         return
     if not out:
-        print(f"No output file specified, using default output file {problem}.OUT")
-        out = solution.with_suffix((".OUT"))
+        out = Path(typer.prompt("Output file", solution.with_suffix((".OUT"))))
 
     # Execute the solution
     print(
