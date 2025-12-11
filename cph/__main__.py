@@ -46,7 +46,7 @@ def new(
             f"The file {file} already exists. Do you want to overide it?", abort=True
         )
 
-    Path(file).write_text(template.read_text())
+    file.write_text(template.read_text())
     Path(f"{problem}.{inp}").touch()
     Path(f"{problem}.{out}").touch()
 
