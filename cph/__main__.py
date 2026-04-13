@@ -1,15 +1,15 @@
-from itertools import zip_longest
-from shutil import which
 import subprocess
+from itertools import zip_longest
 from pathlib import Path
+from shutil import which
 from time import perf_counter
 from typing import Annotated
 
-from rich.table import Table
 import typer
 from rich import print
+from rich.table import Table
 
-app = typer.Typer()
+app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 folder = Path.home() / ".config/cph"
 inp = "INP"
 out = "OUT"
