@@ -8,3 +8,10 @@ dependencies = ["typer>=0.20.0"]
 
 [project.scripts]
 cph = "cph.__main__:app"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
