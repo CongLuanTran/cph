@@ -97,13 +97,13 @@ def run(
         end = perf_counter()
         print(f"Compilation Time: {(end - start):.4f} seconds")
 
-        exec = [solution.stem]
+        exec = [Path(solution.stem).resolve().as_posix()]
     elif language == "py":
         if which("pypy3"):
             print("Using PyPy for execution")
             exec = ["pypy3", solution.name]
         else:
-            print("PypY not found, using CPython for execution")
+            print("PyPy not found, using CPython for execution")
             exec = ["python3", solution.name]
     else:
         print("Unsupported language")
