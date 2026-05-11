@@ -97,7 +97,7 @@ def run(
         end = perf_counter()
         print(f"Compilation Time: {(end - start):.4f} seconds")
 
-        exec = [solution.with_suffix("")]
+        exec = [solution.stem]
     elif language == "py":
         if which("pypy3"):
             print("Using PyPy for execution")
