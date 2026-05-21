@@ -10,7 +10,7 @@ from rich import print
 from rich.table import Table
 
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
-folder = Path.home() / ".config/cph"
+folder = Path.home() / ".config/cph/templates"
 inp = "INP"
 out = "OUT"
 
@@ -34,6 +34,9 @@ def new(
         str, typer.Option("--problem", "-p", help="problem name", prompt="Problem")
     ] = "A",
 ):
+    """
+    Create a new solution boilerplate
+    """
     template = folder / f"template.{language}"
     if not template.exists():
         print("There is no template for this language")
@@ -66,6 +69,9 @@ def run(
         Path | None, typer.Option("--output", "-o", help="output file")
     ] = None,
 ):
+    """
+    Run a solution file
+    """
     # If the argument is empty, prompt for it
     if solution is None:
         solution = Path(typer.prompt("Solution file: "))
