@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from itertools import zip_longest
 from pathlib import Path
 from shutil import which
@@ -8,9 +9,13 @@ from typing import Annotated
 import typer
 from rich import print
 from rich.table import Table
+from xdg_base_dirs import xdg_config_home
+
+from cph import contest
 
 app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
-folder = Path.home() / ".config/cph/templates"
+app.add_typer(contest.app, name="contest")
+folder = xdg_config_home() / "cph/templates"
 inp = "INP"
 out = "OUT"
 
@@ -119,7 +124,7 @@ def run(
     if not inp:
         inp = Path(typer.prompt("Input file", solution.with_suffix(".INP")))
     if not inp.exists():
-        print(f"There is no input file for problem {solution.stem}")
+        print(f"Input file for problem {solution.stem} does not exist")
         return
     if not out:
         out = Path(typer.prompt("Output file", solution.with_suffix((".OUT"))))
@@ -138,8 +143,11 @@ def run(
             end = perf_counter()
             print(f"Execution Time: {(end - start):.4f} seconds")
         except subprocess.CalledProcessError as e:
-            print("Error occured while executing the solution")
-            print(e)
+            print(
+                "Error: Unknown error occured while executing the solution",
+                file=sys.stderr,
+            )
+            print(e, file=sys.stderr)
             return
 
     with (

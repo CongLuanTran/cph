@@ -1,10 +1,14 @@
 [project]
 name = "cph"
-version = "0.1.4.0"
+version = "0.2.0.0"
 description = "A simple helper script for competitive programming"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["typer>=0.20.0"]
+dependencies = [
+  "codeforcesapipy>=2.0.12",
+  "typer>=0.20.0",
+  "xdg-base-dirs>=6.0.2",
+]
 
 [project.scripts]
 cph = "cph.main:app"
